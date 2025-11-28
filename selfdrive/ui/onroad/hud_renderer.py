@@ -2,6 +2,7 @@ import pyray as rl
 from dataclasses import dataclass
 from openpilot.common.constants import CV
 from openpilot.selfdrive.ui.onroad.exp_button import ExpButton
+from openpilot.selfdrive.ui.onroad.torque_bar import TorqueBar
 from openpilot.selfdrive.ui.ui_state import ui_state, UIStatus
 from openpilot.system.ui.lib.application import gui_app, FontWeight
 from openpilot.system.ui.lib.text_measure import measure_text_cached
@@ -70,6 +71,7 @@ class HudRenderer(Widget):
     self._font_medium: rl.Font = gui_app.font(FontWeight.MEDIUM)
 
     self._exp_button = ExpButton(UI_CONFIG.button_size, UI_CONFIG.wheel_icon_size)
+    self._torque_bar = TorqueBar()
 
   def _update_state(self) -> None:
     """Update HUD state based on car state and controls state."""
@@ -119,6 +121,10 @@ class HudRenderer(Widget):
     button_x = rect.x + rect.width - UI_CONFIG.border_size - UI_CONFIG.button_size
     button_y = rect.y + UI_CONFIG.border_size
     self._exp_button.render(rl.Rectangle(button_x, button_y, UI_CONFIG.button_size, UI_CONFIG.button_size))
+
+    # Render torque bar (steering limit indicator) - only for torque-based lateral control
+    if ui_state.sm['controlsState'].lateralControlState.which() != 'angleState':
+      self._torque_bar.render(rect)
 
   def handle_mouse_event(self) -> bool:
     return bool(self._exp_button.handle_mouse_event())
